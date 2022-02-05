@@ -23,8 +23,8 @@ pipeline {
 			stage('Docker Push') {
 				steps {
 					echo 'Pushing image'
-					withCredentials([usernamePassword(credentialsId: 'dockercreds', passwordVariable: 'dockerhubpassword', usernameVariable: 'dockerhubusername')]) {
-						sh 'docker login -u $dockerhubusername -p $dockerhubpassword'
+					withCredentials([usernamePassword(credentialsId: 'gitcredentials', passwordVariable: 'dockerpasswordcreds', usernameVariable: 'dockerusernamecreds')]) {
+						sh 'docker login -u $dockerusernamecreds -p $dockerpasswordcreds'
 						sh 'docker push manikjami/nodeapp:$BUILD_NUMBER'
 					}
 				}
@@ -33,10 +33,10 @@ pipeline {
 				steps {
 					echo 'deploying docker image'
 					sh '''
-          ssh -t root@3.87.209.65
-					docker ps -f name=nodefirst -q | xargs --no-run-if-empty docker container stop
-					docker container ls -a -f name=nodefirst -q | xargs -r docker container rm
-					docker run -d --name nodefirst -p 3000:3000 manikjami/nodeapp:$BUILD_NUMBER
+          				ssh -t root@3.87.209.65
+					docker ps -f name=nodesecond -q | xargs --no-run-if-empty docker container stop
+					docker container ls -a -f name=nodesecond -q | xargs -r docker container rm
+					docker run -d --name nodesecond -p 3000:3000 manikjami/nodeapp:$BUILD_NUMBER
 					'''
 				}
 			}

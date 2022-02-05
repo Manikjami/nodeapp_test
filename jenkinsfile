@@ -1,0 +1,44 @@
+pipeline {
+	agent any
+	options {
+            timeout(time: 20, unit: "MINUTES") 
+            buildDiscarder logRotator(artifactDaysToKeepStr: "", artifactNumToKeepStr: "", daysToKeepStr: "2", numToKeepStr: "2")
+        }  
+		stages {
+			stage('checkout scm') {
+                steps {
+                  checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: 'gitcredentials', url: 'https://github.com/Manikjami/nodeapp_test.git']]])
+				}
+			}
+			stage("Build"){
+				steps{
+					sh 'npm install'
+				}
+			}
+			stage("building docker image") {
+				steps {
+					sh 'docker build -t manikjami/nodeapp:$BUILD_NUMBER .'
+				}
+			}
+			stage('Docker Push') {
+				steps {
+					echo 'Pushing image'
+					withCredentials([usernamePassword(credentialsId: 'dockercreds', passwordVariable: 'dockerhubpassword', usernameVariable: 'dockerhubusername')]) {
+						sh 'docker login -u $dockerhubusername -p $dockerhubpassword'
+						sh 'docker push manikjami/nodeapp:$BUILD_NUMBER'
+					}
+				}
+			} 
+			stage ('Deploy') {
+				steps {
+					echo 'deploying docker image'
+					sh '''
+          ssh -t root@3.87.209.65
+					docker ps -f name=nodefirst -q | xargs --no-run-if-empty docker container stop
+					docker container ls -a -f name=nodefirst -q | xargs -r docker container rm
+					docker run -d --name nodefirst -p 3000:3000 manikjami/nodeapp:$BUILD_NUMBER
+					'''
+				}
+			}
+		}
+	}

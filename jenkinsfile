@@ -32,7 +32,9 @@ pipeline {
 			stage ('Deploy') {
 				steps {
 					echo 'deploying docker image'
-					ssh -tt root@3.87.209.65
+					ssh -t root@3.87.209.65
+					docker ps -f name=nodesecond -q | xargs --no-run-if-empty docker container stop
+					docker container ls -a -f name=nodesecond -q | xargs -r docker container rm
 					sh 'docker run -d --name nodesecond -p 3000:3000 manikjami/nodeapp:$BUILD_NUMBER'
 				}
 			}

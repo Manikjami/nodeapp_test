@@ -23,8 +23,8 @@ pipeline {
 			stage('Docker Push') {
 				steps {
 					echo 'Pushing image'
-					withCredentials([usernamePassword(credentialsId: 'gitcredentials', passwordVariable: 'dockerpasswordcreds', usernameVariable: 'dockerusernamecreds')]) {
-						sh 'docker login -u $dockerusernamecreds -p $dockerpasswordcreds'
+					withCredentials([usernamePassword(credentialsId: 'dockerhubcreds', passwordVariable: 'dockerhubpassword', usernameVariable: 'dockerhubuser')]) {
+						sh 'docker login -u $dockerhubuser -p $dockerhubpassword'
 						sh 'docker push manikjami/nodeapp:$BUILD_NUMBER'
 					}
 				}
